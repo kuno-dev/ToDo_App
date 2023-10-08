@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo App</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+
+    <style>
+        .demo-list-control {
+            width: 600px;
+        }
+        .page-content {
+            padding: 50px 25%;
+            margin-top: 50px;
+        }
+        .mdl-mini-footer {
+            position: relative;
+        }
+    </style>
+
+    <script>
+        function additem() {
+            const text = document.getElementById('todoitem').value.trim(); // Trim any leading/trailing whitespace
+            if (text) {
+                const todoList = document.getElementById('todolist');
+                const listItem = document.createElement('li');
+                listItem.className = 'mdl-list__item';
+
+                const primaryContent = document.createElement('span');
+                primaryContent.className = 'mdl-list__item-primary-content';
+
+                const checkboxLabel = document.createElement('label');
+                checkboxLabel.className = 'mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect';
+                const checkboxInput = document.createElement('input');
+                checkboxInput.type = 'checkbox';
+                checkboxInput.className = 'mdl-checkbox__input';
+                checkboxLabel.appendChild(checkboxInput);
+
+                const itemText = document.createTextNode(text);
+                primaryContent.appendChild(checkboxLabel);
+                primaryContent.appendChild(itemText);
+                listItem.appendChild(primaryContent);
+                todoList.appendChild(listItem);
+                componentHandler.upgradeAllRegistered();
+
+                document.getElementById('todoitem').value = '';
+            }
+        }
+
+        // Function to export the ToDo list data to a JSON file
+        function exportList() {
+            // Retrieve the ToDo list items
+            const todoItems = document.querySelectorAll('.mdl-list__item');
+
+            // Create an array to store the ToDo items and their checked status
+            const todoData = [];
+
+            // Loop through the items and extract their text content and checked status
+            todoItems.forEach(itemElement => {
+                const primaryContent = itemElement.querySelector('.mdl-list__item-primary-content');
+                const checkbox = itemElement.querySelector('.mdl-checkbox__input');
+
+                const item = {
+                    text: primaryContent.textContent.trim(),
+                    checked: checkbox.checked,
+                };
+
+                todoData.push(item);
+            });
+
+            // Create a JSON object to hold the data
+            const exportData = {
+                todoList: todoData,
+            };
+
+            // Convert the data to a JSON string
+            const jsonData = JSON.stringify(exportData, null, 2);
+
+            // Create a Blob containing the JSON data
+            const blob = new Blob([jsonData], { type: 'application/json' });
+
+            // Create a download link for the JSON file
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'todolist.json';
+            a.textContent = 'Download JSON';
+
+            // Trigger a click event to initiate the download
+            a.click();
+
+            // Clean up resources
+            URL.revokeObjectURL(url);
+        }
+
+        // Function to import data from a JSON file and create the list
+        function importList(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const jsonContent = e.target.result;
+                try {
+                    const importedData = JSON.parse(jsonContent);
+                    const todoList = document.getElementById('todolist');
+
+                    // Clear the existing list
+                    todoList.innerHTML = '';
+
+                    // Iterate through the imported data and create list items
+                    importedData.todoList.forEach(item => {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'mdl-list__item';
+
+                        const primaryContent = document.createElement('span');
+                        primaryContent.className = 'mdl-list__item-primary-content';
+
+                        const checkboxLabel = document.createElement('label');
+                        checkboxLabel.className = 'mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect';
+                        checkboxLabel.setAttribute('for', 'list-checkbox-' + Math.random());
+
+                        const checkboxInput = document.createElement('input');
+                        checkboxInput.type = 'checkbox';
+                        checkboxInput.className = 'mdl-checkbox__input';
+                        checkboxInput.checked = item.checked;
+
+                        checkboxLabel.appendChild(checkboxInput);
+                        const itemText = document.createTextNode(item.text);
+                        primaryContent.appendChild(checkboxLabel);
+                        primaryContent.appendChild(itemText);
+                        listItem.appendChild(primaryContent);
+                        todoList.appendChild(listItem);
+                        componentHandler.upgradeAllRegistered();
+                    });
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+    </script>
+</head>
+<body>
+    <div class="mdl-layout mdl-js-layout">
+        <header class="mdl-layout__header mdl-layout__header--scroll">
+            <div class="mdl-layout__header-row">
+                <!-- Title -->
+                <span class="mdl-layout-title">ToDo App</span>
+                <!-- Add spacer, to align navigation to the right -->
+                <div class="mdl-layout-spacer"></div>
+                <!-- Navigation -->
+                <nav class="mdl-navigation">
+                    <a class="mdl-navigation__link" href="mailto:katja33herold@gmail.com">
+                        <div id="tt2" class="icon material-icons">mail</div>
+                        <div class="mdl-tooltip mdl-tooltip--large" for="tt2">
+                            contact Author
+                        </div></a>
+                </nav>
+            </div>
+        </header>
+        <div class="mdl-layout__drawer">
+            <span class="mdl-layout-title">Menu</span>
+            <nav class="mdl-navigation">
+                <a class="mdl-navigation__link" href="index.html" >Edit existing List</a>
+                <a class="mdl-navigation__link" href="#" onclick="exportList()">Export List</a>
+                <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importList(this)">
+                <label class="mdl-navigation__link" for="importFile">Import List</label>
+            </nav>
+        </div>
+        <main class="mdl-layout__content">
+            <div class="page-content">
+                <div id="p2" class="mdl-progress mdl-js-progress mdl-progress__indeterminate"></div>
+                <div class="mdl-layout__content">
+                    <!-- Your content goes here -->
+                    <h4>ToDo List Creator</h4><br>
+                    <form onsubmit="additem(); return false;" action="#">
+                        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                            <input class="mdl-textfield__input" type="text" id="todoitem">
+                            <label class="mdl-textfield__label" for="sample3">ToDo...</label>
+                        </div>
+
+                        <button id="demo-show-toast" type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                            add
+                        </button>
+                    </form>
+
+                    <ul class="demo-list-control mdl-list" id="todolist"></ul>
+
+                    <div id="demo-toast-example" class="mdl-js-snackbar mdl-snackbar">
+                        <div class="mdl-snackbar__text"></div>
+                        <button class="mdl-snackbar__action" type="button"></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer class="mdl-mini-footer">
+            <div class="mdl-mini-footer__left-section">
+                <div class="mdl-logo">ToDo App</div>
+                <ul class="mdl-mini-footer__link-list">
+                    <li>
+                        <a id="show-dialog" type="button" class="mdl-button">Version</a>
+                        <dialog class="mdl-dialog">
+                            <h4 class="mdl-dialog__title">ToDo App</h4>
+                            <div class="mdl-dialog__content">
+                                <p>Version 1.39</b> - 2023.10</p>
+                                <p>by katja33herold@gmail.com</p>
+                            </div>
+                            <div class="mdl-dialog__actions">
+                                <button type="button" class="mdl-button close">Okay</button>
+                            </div>
+                        </dialog>
+                        <script>
+                            var dialog = document.querySelector('dialog');
+                            var showDialogButton = document.querySelector('#show-dialog');
+                            if (!dialog.showModal) {
+                                dialogPolyfill.registerDialog(dialog);
+                            }
+                            showDialogButton.addEventListener('click', function () {
+                                dialog.showModal();
+                            });
+                            dialog.querySelector('.close').addEventListener('click', function () {
+                                dialog.close();
+                            });
+                        </script>
+                    </li>
+                </ul>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
